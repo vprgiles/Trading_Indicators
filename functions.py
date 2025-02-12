@@ -51,7 +51,7 @@ def sma(df: pd.DataFrame, col_name: str, length: int) -> pd.DataFrame:
     Args:
     df (pd.DataFrame): The DataFrame ingested  
     col_name (str): The name of the column in the DataFrame holding the data to calculate over
-    length (str): The length of the moving average to calculate
+    length (int): The length of the moving average to calculate
     Returns:
     DataFrame with the additional calculated column.
     '''
@@ -66,16 +66,67 @@ def sma(df: pd.DataFrame, col_name: str, length: int) -> pd.DataFrame:
 
 
 ## Bollinger Bands
+def bollinger_bands(df: pd.DataFrame, col_name: str,
+                    length: int = 20, stdev: int = 2) -> pd.DataFrame:
+    '''Function ingests a dataframe, returns upper and lower bollinger bands with the SMA line
+    Args:
+    df (pd.DataFrame): The DataFrame ingested  
+    col_name (str): The name of the column in the DataFrame holding the data to calculate over
+    length (int): The length of the moving average to calculate
+    stdev (int): The number of standard deviations used in the creation of the bands
+    Returns:
+    DataFrame with the additional calculated column.
+    '''
+    if col_name not in df.columns:  # Check whether the column exists in the dataframe
+        raise ValueError(f"Column '{col_name}' does not exist in the DataFrame.")
+        
+    if not np.issubdtype(df[col_name].dtype, np.number):  # Check if the column is numeric
+        raise TypeError(f"The column '{col_name}' is not numeric. It must be numeric for SMA calculation.")
+        
+    df[f"sma_{length}"] = df[col_name].rolling(length).sum() / length 
+    df[f"bb_{length}_{stdev}_min"] = df[f"sma_{length}"] - test_data[col_name].rolling(length).std() * stdev
+    df[f"bb_{length}_{stdev}_max"] = df[f"sma_{length}"] + test_data[col_name].rolling(length).std() * stdev
+     
+    return df
+
+
+## Bollinger Bands Percentage
+def bollinger_bands_perc(df: pd.DataFrame, col_name: str,
+                         length: int = 20, stdev: int = 2) -> pd.DataFrame:
+    '''Function ingests a dataframe, returns bollinger band percentage values in a separate column in the dataframe
+    Args:
+    df (pd.DataFrame): The DataFrame ingested  
+    col_name (str): The name of the column in the DataFrame holding the data to calculate over
+    length (int): The length of the moving average to calculate
+    stdev (int): The number of standard deviations used in the creation of the bands
+    Returns:
+    DataFrame with the additional calculated column. 
+    '''
+    if col_name not in df.columns:  # Check whether the column exists in the dataframe
+        raise ValueError(f"Column '{col_name}' does not exist in the DataFrame.")
+        
+    if not np.issubdtype(df[col_name].dtype, np.number):  # Check if the column is numeric
+        raise TypeError(f"The column '{col_name}' is not numeric. It must be numeric for SMA calculation.")
+    
+    # Upper and Lower bands
+    bb_lower = (df[col_name].rolling(length).sum() / length) - test_data[col_name].rolling(length).std() * stdev
+    bb_upper = (df[col_name].rolling(length).sum() / length) + test_data[col_name].rolling(length).std() * stdev
+
+    # %b = (Current Price - Lower Band) / (Upper Band - Lower Band)
+    df[f"bb_{length}_{stdev}_perc"] = (df[col_name] - bb_lower) / (bb_upper - bb_lower)
+     
+    return df
 
 
 
-##Momentum?
+
+## Momentum?
 
 
+## RSI
 
 
-
-
+# Stochastic Indicator?
 
 
 
